@@ -33,7 +33,7 @@ var roles = {
   
   // AI & Search
   cognitiveServicesOpenAiUser: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
-  searchIndexDataContributor: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
+  searchIndexDataContributor: '8ebe5a00-7179-4914-b839-f5f30b7d44ae'
   
   // Messaging
   serviceBusDataOwner: '090c5cfd-751d-490a-894a-3ce6f1109419'
