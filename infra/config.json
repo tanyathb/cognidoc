@@ -1,0 +1,11 @@
+{
+  "environment": "dev",
+  "location": "australiaeast",
+  "openAiLocation": "eastus",
+  "resourceGroup": "rg-cognidoc-dev",
+  "storageAccountName": "cognidocdevst",
+  "cosmosAccountName": "cognidoc-dev-cosmos",
+  "searchServiceName": "cognidoc-dev-srch",
+  "openAiResourceName": "cognidoc-dev-openai",
+  "serviceBusNamespaceName": "sbns-cognidoc-dev"
+}

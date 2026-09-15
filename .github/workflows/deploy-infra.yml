@@ -1,0 +1,63 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'infra/**'
+      - '.github/workflows/deploy-infra.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-bicep:
+    name: Provision Azure Infrastructure
+    runs-on: ubuntu-latest
+    env:
+      RESOURCE_GROUP: rg-cognidoc-dev
+      LOCATION: australiaeast
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure Resource Group Exists
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az group create --name ${{ env.RESOURCE_GROUP }} --location ${{ env.LOCATION }}
+
+      - name: Validate Bicep Template
+        uses: azure/cli@v2
+        env:
+          DEV_PRINCIPAL_ID: ${{ secrets.AZURE_DEVELOPER_PRINCIPAL_ID }}
+        with:
+          inlineScript: |
+            az deployment group validate \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --template-file infra/main.bicep \
+              --parameters infra/main.bicepparam
+              --parameters developerPrincipalId="$DEV_PRINCIPAL_ID"
+
+      - name: Deploy Bicep Resources
+        uses: azure/cli@v2
+        env:
+          DEV_PRINCIPAL_ID: ${{ secrets.AZURE_DEVELOPER_PRINCIPAL_ID }}
+        with:
+          inlineScript: |
+            az deployment group create \
+              --name "cognidoc-deploy-${{ github.run_number }}" \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --template-file infra/main.bicep \
+              --parameters infra/main.bicepparam
+              --parameters developerPrincipalId="$DEV_PRINCIPAL_ID"
