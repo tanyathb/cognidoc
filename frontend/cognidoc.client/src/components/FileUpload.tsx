@@ -92,7 +92,7 @@ export const FileUpload: React.FC = () => {
             formData.append("file", file);
 
             // Call our server-side local proxy route instead of hitting the raw storage port
-            const response = await fetch(`${API_URL}/api/Upload/local-direct-upload`, {
+            const response = await fetch(`${API_URL}/api/upload`, {
                 method: "POST",
                 body: formData
                 // Note: Do NOT set Content-Type header manually here; the browser automatically sets multipart/form-data

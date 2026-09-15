@@ -1,71 +1,67 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using Azure.Storage.Sas;
 using CogniDoc.WebAPI.Configuration;
-using CogniDoc.WebAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace CogniDoc.WebAPI.Controllers
+namespace CogniDoc.WebAPI.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class UploadController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class UploadController : Controller
+    private readonly ILogger<UploadController> _logger;
+    private readonly BlobServiceClient _blobServiceClient;
+    private readonly StorageOptions _storageOptions;
+
+    public UploadController(
+        BlobServiceClient blobServiceClient,
+        ILogger<UploadController> logger,
+        IOptions<StorageOptions> storageOptions)
     {
-        private readonly ILogger<UploadController> _logger;
-        private readonly BlobServiceClient _blobServiceClient;
-        private readonly StorageOptions _storageOptions;
+        _blobServiceClient = blobServiceClient;
+        _storageOptions = storageOptions.Value;
+        _logger = logger;
+    }
 
-        public UploadController(
-            BlobServiceClient blobServiceClient, 
-            ILogger<UploadController> logger,
-            IOptions<StorageOptions> storageOptions)
+    [HttpPost]
+    [DisableRequestSizeLimit]
+    public async Task<IActionResult> Upload(IFormFile? file)
+    {
+        if (file is null || file.Length == 0)
         {
-            _blobServiceClient = blobServiceClient;
-            _storageOptions = storageOptions.Value;
-            _logger = logger;
+            return BadRequest(new { success = false, message = "No document payload received." });
         }
 
-       
-        [HttpPost("upload")]
-        [DisableRequestSizeLimit] // Allows heavy enterprise document uploads without IIS blocking
-        public async Task<IActionResult> LocalDirectUpload(IFormFile file)
+        try
         {
-            if (file == null || file.Length == 0)
+            _logger.LogInformation("Processing upload for file: {FileName} ({Size} bytes)", file.FileName, file.Length);
+
+            BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(_storageOptions.ContainerName);
+            await containerClient.CreateIfNotExistsAsync();
+
+            string uniqueBlobName = $"{Guid.NewGuid()}-{file.FileName}";
+            BlobClient blobClient = containerClient.GetBlobClient(uniqueBlobName);
+
+            await using (var stream = file.OpenReadStream())
             {
-                return BadRequest("No document payload received.");
+                var blobHttpHeaders = new BlobHttpHeaders { ContentType = file.ContentType };
+                await blobClient.UploadAsync(stream, new BlobUploadOptions { HttpHeaders = blobHttpHeaders });
             }
 
-            try
+            _logger.LogInformation("File successfully uploaded to blob destination: {Uri}", blobClient.Uri);
+
+            return Ok(new
             {
-                _logger.LogInformation("Proxied server-side upload running for: {Name}", file.FileName);
-
-                // 1. Target the local container destination
-                BlobContainerClient containerClient = _blobServiceClient.GetBlobContainerClient(_storageOptions.ContainerName);
-                await containerClient.CreateIfNotExistsAsync();
-
-                // 2. Format a clean unique name matching our original tracking architecture
-                string uniqueBlobName = $"{Guid.NewGuid()}-{file.FileName}";
-                BlobClient blobClient = containerClient.GetBlobClient(uniqueBlobName);
-
-                // 3. Stream the file directly into Azurite server-side 
-                using (var stream = file.OpenReadStream())
-                {
-                    var blobHttpHeaders = new BlobHttpHeaders { ContentType = file.ContentType };
-                    await blobClient.UploadAsync(stream, new BlobUploadOptions { HttpHeaders = blobHttpHeaders });
-                }
-
-                _logger.LogInformation("File successfully written to Azurite storage node: {Url}", blobClient.Uri);
-
-                // Return a success payload to the React frontend component node
-                return Ok(new { success = true, blobUrl = blobClient.Uri.ToString() });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Server-side proxy injection workflow failed.");
-                return StatusCode(500, $"Internal server storage malfunction: {ex.Message}");
-            }
+                success = true,
+                blobName = uniqueBlobName,
+                blobUrl = blobClient.Uri.ToString()
+            });
         }
-
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Upload processing failed for file: {FileName}", file.FileName);
+            return StatusCode(500, new { success = false, message = $"Internal server storage failure: {ex.Message}" });
+        }
     }
 }
