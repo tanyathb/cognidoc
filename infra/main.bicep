@@ -38,10 +38,23 @@ module appService 'modules/appservice.bicep' = {
   }
 }
 
+module functionApp 'modules/functionapp.bicep' = {
+  name: 'functionAppDeploy'
+  params: {
+    storageAccountName: storage.outputs.name
+    blobEndpoint: storage.outputs.blobEndpoint
+    cosmosEndpoint: cosmos.outputs.documentDbEndpoint
+    searchEndpoint: search.outputs.searchEndpoint
+    openAiEndpoint: openAi.outputs.openAiEndpoint
+    serviceBusNamespaceName: serviceBus.outputs.name
+  }
+}
+
 module rbac 'modules/rbac.bicep' = {
   name: 'rbacDeploy'
   params: {
     apiPrincipalId: appService.outputs.principalId
+    functionPrincipalId: functionApp.outputs.principalId
     developerPrincipalId: developerPrincipalId
     storageAccountName: storage.outputs.name
     cosmosAccountName: cosmos.outputs.name
@@ -58,3 +71,4 @@ output OPENAI_ENDPOINT string = openAi.outputs.openAiEndpoint
 output SERVICEBUS_ENDPOINT string = serviceBus.outputs.serviceBusEndpoint
 output API_HOSTNAME string = appService.outputs.defaultHostName
 output SWA_HOSTNAME string = staticWebApp.outputs.defaultHostname
+output FUNCTION_HOSTNAME string = functionApp.outputs.defaultHostName

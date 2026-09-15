@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.47.16.16243",
-      "templateHash": "10098830036312120181"
+      "templateHash": "3714067670534477054"
     }
   },
   "parameters": {
@@ -579,7 +579,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.47.16.16243",
-              "templateHash": "10793185515455401573"
+              "templateHash": "5621854567948089628"
             }
           },
           "parameters": {
@@ -639,7 +639,7 @@
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', 'asp-cognidoc-dev')]",
                 "httpsOnly": true,
                 "siteConfig": {
-                  "linuxFxVersion": "DOTNETCORE|8.0",
+                  "linuxFxVersion": "DOTNETCORE|10.0",
                   "alwaysOn": true,
                   "appSettings": [
                     {
@@ -725,6 +725,197 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
+      "name": "functionAppDeploy",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "storageAccountName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'storageDeploy'), '2025-04-01').outputs.name.value]"
+          },
+          "blobEndpoint": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'storageDeploy'), '2025-04-01').outputs.blobEndpoint.value]"
+          },
+          "cosmosEndpoint": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'cosmosDeploy'), '2025-04-01').outputs.documentDbEndpoint.value]"
+          },
+          "searchEndpoint": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'searchDeploy'), '2025-04-01').outputs.searchEndpoint.value]"
+          },
+          "openAiEndpoint": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'openAiDeploy'), '2025-04-01').outputs.openAiEndpoint.value]"
+          },
+          "serviceBusNamespaceName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'serviceBusDeploy'), '2025-04-01').outputs.name.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.47.16.16243",
+              "templateHash": "5237439439106625239"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "Azure region for deployment"
+              }
+            },
+            "functionAppName": {
+              "type": "string",
+              "defaultValue": "func-cognidoc-ingestion-dev",
+              "metadata": {
+                "description": "Function App resource name"
+              }
+            },
+            "storageAccountName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the storage account used by Function host and blob triggers"
+              }
+            },
+            "blobEndpoint": {
+              "type": "string",
+              "metadata": {
+                "description": "Storage Blob Service Endpoint URL"
+              }
+            },
+            "cosmosEndpoint": {
+              "type": "string",
+              "metadata": {
+                "description": "Cosmos DB Document Endpoint URL"
+              }
+            },
+            "openAiEndpoint": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure OpenAI Endpoint URL"
+              }
+            },
+            "searchEndpoint": {
+              "type": "string",
+              "metadata": {
+                "description": "Azure AI Search Endpoint URL"
+              }
+            },
+            "serviceBusNamespaceName": {
+              "type": "string",
+              "metadata": {
+                "description": "Service Bus Namespace Name"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Web/serverfarms",
+              "apiVersion": "2023-12-01",
+              "name": "[format('plan-{0}', parameters('functionAppName'))]",
+              "location": "[parameters('location')]",
+              "kind": "linux",
+              "sku": {
+                "name": "Y1",
+                "tier": "Dynamic"
+              },
+              "properties": {
+                "reserved": true
+              }
+            },
+            {
+              "type": "Microsoft.Web/sites",
+              "apiVersion": "2023-12-01",
+              "name": "[parameters('functionAppName')]",
+              "location": "[parameters('location')]",
+              "kind": "functionapp,linux",
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', format('plan-{0}', parameters('functionAppName')))]",
+                "httpsOnly": true,
+                "siteConfig": {
+                  "linuxFxVersion": "DOTNET-ISOLATED|10.0",
+                  "minTlsVersion": "1.2",
+                  "ftpsState": "Disabled",
+                  "appSettings": [
+                    {
+                      "name": "FUNCTIONS_EXTENSION_VERSION",
+                      "value": "~4"
+                    },
+                    {
+                      "name": "FUNCTIONS_WORKER_RUNTIME",
+                      "value": "dotnet-isolated"
+                    },
+                    {
+                      "name": "AzureWebJobsStorage__accountName",
+                      "value": "[parameters('storageAccountName')]"
+                    },
+                    {
+                      "name": "Storage__BlobEndpoint",
+                      "value": "[parameters('blobEndpoint')]"
+                    },
+                    {
+                      "name": "CosmosDb__Endpoint",
+                      "value": "[parameters('cosmosEndpoint')]"
+                    },
+                    {
+                      "name": "AzureOpenAI__Endpoint",
+                      "value": "[parameters('openAiEndpoint')]"
+                    },
+                    {
+                      "name": "AzureSearch__Endpoint",
+                      "value": "[parameters('searchEndpoint')]"
+                    },
+                    {
+                      "name": "ServiceBus__FullyQualifiedNamespace",
+                      "value": "[format('{0}.servicebus.windows.net', parameters('serviceBusNamespaceName'))]"
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', format('plan-{0}', parameters('functionAppName')))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "id": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
+            },
+            "name": {
+              "type": "string",
+              "value": "[parameters('functionAppName')]"
+            },
+            "principalId": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01', 'full').identity.principalId]"
+            },
+            "defaultHostName": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2023-12-01').defaultHostName]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'cosmosDeploy')]",
+        "[resourceId('Microsoft.Resources/deployments', 'openAiDeploy')]",
+        "[resourceId('Microsoft.Resources/deployments', 'searchDeploy')]",
+        "[resourceId('Microsoft.Resources/deployments', 'serviceBusDeploy')]",
+        "[resourceId('Microsoft.Resources/deployments', 'storageDeploy')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2025-04-01",
       "name": "rbacDeploy",
       "properties": {
         "expressionEvaluationOptions": {
@@ -734,6 +925,9 @@
         "parameters": {
           "apiPrincipalId": {
             "value": "[reference(resourceId('Microsoft.Resources/deployments', 'appServiceDeploy'), '2025-04-01').outputs.principalId.value]"
+          },
+          "functionPrincipalId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'functionAppDeploy'), '2025-04-01').outputs.principalId.value]"
           },
           "developerPrincipalId": {
             "value": "[parameters('developerPrincipalId')]"
@@ -761,11 +955,18 @@
             "_generator": {
               "name": "bicep",
               "version": "0.47.16.16243",
-              "templateHash": "9007906539766500565"
+              "templateHash": "6167667875478476895"
             }
           },
           "parameters": {
-            "functionAppPrincipalId": {
+            "apiPrincipalId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Optional: Principal ID of the App Service Web API Managed Identity"
+              }
+            },
+            "functionPrincipalId": {
               "type": "string",
               "defaultValue": "",
               "metadata": {
@@ -777,13 +978,6 @@
               "defaultValue": "",
               "metadata": {
                 "description": "Optional: Entra ID of the developer for local debugging"
-              }
-            },
-            "apiPrincipalId": {
-              "type": "string",
-              "defaultValue": "",
-              "metadata": {
-                "description": "Optional: Principal ID of the App Service Web API Managed Identity"
               }
             },
             "storageAccountName": {
@@ -802,122 +996,86 @@
               "type": "string"
             }
           },
+          "variables": {
+            "roles": {
+              "storageBlobDataOwner": "b7e6dc6d-f1e8-4753-8033-0f276bb0955b",
+              "storageBlobDataContributor": "ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+              "storageQueueDataContributor": "974c5e8b-45b9-4653-a493-b5813815108a",
+              "cognitiveServicesOpenAiUser": "5e0bd9bd-7b93-4f28-af87-19fc36ad61bd",
+              "searchIndexDataContributor": "8ebe5a00-799e-43f5-93ac-243d3dce84a7",
+              "serviceBusDataOwner": "090c5cfd-751d-490a-894a-3ce6f1109419"
+            },
+            "cosmosSqlDataContributorId": "00000000-0000-0000-0000-000000000002"
+          },
           "resources": [
             {
-              "condition": "[not(empty(parameters('functionAppPrincipalId')))]",
+              "condition": "[not(empty(parameters('functionPrincipalId')))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
-              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('functionAppPrincipalId'), 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('functionPrincipalId'), variables('roles').storageBlobDataOwner)]",
               "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
-                "principalId": "[parameters('functionAppPrincipalId')]",
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').storageBlobDataOwner)]",
+                "principalId": "[parameters('functionPrincipalId')]",
                 "principalType": "ServicePrincipal"
               }
             },
             {
-              "condition": "[not(empty(parameters('functionAppPrincipalId')))]",
-              "type": "Microsoft.Authorization/roleAssignments",
-              "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiResourceName'))]",
-              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiResourceName')), parameters('functionAppPrincipalId'), '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
-              "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
-                "principalId": "[parameters('functionAppPrincipalId')]",
-                "principalType": "ServicePrincipal"
-              }
-            },
-            {
-              "condition": "[not(empty(parameters('functionAppPrincipalId')))]",
-              "type": "Microsoft.Authorization/roleAssignments",
-              "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.Search/searchServices', parameters('searchServiceName'))]",
-              "name": "[guid(resourceId('Microsoft.Search/searchServices', parameters('searchServiceName')), parameters('functionAppPrincipalId'), '8ebe5a00-799e-43f5-93ac-243d3dce84a7')]",
-              "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7')]",
-                "principalId": "[parameters('functionAppPrincipalId')]",
-                "principalType": "ServicePrincipal"
-              }
-            },
-            {
-              "condition": "[not(empty(parameters('functionAppPrincipalId')))]",
-              "type": "Microsoft.Authorization/roleAssignments",
-              "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]",
-              "name": "[guid(resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName')), parameters('functionAppPrincipalId'), '090c5cfd-751d-490a-894a-3ce6f1109419')]",
-              "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '090c5cfd-751d-490a-894a-3ce6f1109419')]",
-                "principalId": "[parameters('functionAppPrincipalId')]",
-                "principalType": "ServicePrincipal"
-              }
-            },
-            {
-              "condition": "[not(empty(parameters('functionAppPrincipalId')))]",
-              "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
-              "apiVersion": "2024-05-15",
-              "name": "[format('{0}/{1}', parameters('cosmosAccountName'), guid(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName')), parameters('functionAppPrincipalId'), '00000000-0000-0000-0000-000000000002'))]",
-              "properties": {
-                "roleDefinitionId": "[format('{0}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002', resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName')))]",
-                "principalId": "[parameters('functionAppPrincipalId')]",
-                "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName'))]"
-              }
-            },
-            {
-              "condition": "[not(empty(parameters('developerPrincipalId')))]",
+              "condition": "[not(empty(parameters('functionPrincipalId')))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
-              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('developerPrincipalId'), 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('functionPrincipalId'), variables('roles').storageQueueDataContributor)]",
               "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
-                "principalId": "[parameters('developerPrincipalId')]",
-                "principalType": "User"
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').storageQueueDataContributor)]",
+                "principalId": "[parameters('functionPrincipalId')]",
+                "principalType": "ServicePrincipal"
               }
             },
             {
-              "condition": "[not(empty(parameters('developerPrincipalId')))]",
+              "condition": "[not(empty(parameters('functionPrincipalId')))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiResourceName'))]",
-              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiResourceName')), parameters('developerPrincipalId'), '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiResourceName')), parameters('functionPrincipalId'), variables('roles').cognitiveServicesOpenAiUser)]",
               "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
-                "principalId": "[parameters('developerPrincipalId')]",
-                "principalType": "User"
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').cognitiveServicesOpenAiUser)]",
+                "principalId": "[parameters('functionPrincipalId')]",
+                "principalType": "ServicePrincipal"
               }
             },
             {
-              "condition": "[not(empty(parameters('developerPrincipalId')))]",
+              "condition": "[not(empty(parameters('functionPrincipalId')))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.Search/searchServices', parameters('searchServiceName'))]",
-              "name": "[guid(resourceId('Microsoft.Search/searchServices', parameters('searchServiceName')), parameters('developerPrincipalId'), '8ebe5a00-799e-43f5-93ac-243d3dce84a7')]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', parameters('searchServiceName')), parameters('functionPrincipalId'), variables('roles').searchIndexDataContributor)]",
               "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7')]",
-                "principalId": "[parameters('developerPrincipalId')]",
-                "principalType": "User"
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').searchIndexDataContributor)]",
+                "principalId": "[parameters('functionPrincipalId')]",
+                "principalType": "ServicePrincipal"
               }
             },
             {
-              "condition": "[not(empty(parameters('developerPrincipalId')))]",
+              "condition": "[not(empty(parameters('functionPrincipalId')))]",
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]",
-              "name": "[guid(resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName')), parameters('developerPrincipalId'), '090c5cfd-751d-490a-894a-3ce6f1109419')]",
+              "name": "[guid(resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName')), parameters('functionPrincipalId'), variables('roles').serviceBusDataOwner)]",
               "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '090c5cfd-751d-490a-894a-3ce6f1109419')]",
-                "principalId": "[parameters('developerPrincipalId')]",
-                "principalType": "User"
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').serviceBusDataOwner)]",
+                "principalId": "[parameters('functionPrincipalId')]",
+                "principalType": "ServicePrincipal"
               }
             },
             {
-              "condition": "[not(empty(parameters('developerPrincipalId')))]",
+              "condition": "[not(empty(parameters('functionPrincipalId')))]",
               "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
               "apiVersion": "2024-05-15",
-              "name": "[format('{0}/{1}', parameters('cosmosAccountName'), guid(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName')), parameters('developerPrincipalId'), '00000000-0000-0000-0000-000000000002'))]",
+              "name": "[format('{0}/{1}', parameters('cosmosAccountName'), guid(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName')), parameters('functionPrincipalId'), variables('cosmosSqlDataContributorId')))]",
               "properties": {
-                "roleDefinitionId": "[format('{0}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002', resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName')))]",
-                "principalId": "[parameters('developerPrincipalId')]",
+                "roleDefinitionId": "[format('{0}/sqlRoleDefinitions/{1}', resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName')), variables('cosmosSqlDataContributorId'))]",
+                "principalId": "[parameters('functionPrincipalId')]",
                 "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName'))]"
               }
             },
@@ -926,9 +1084,9 @@
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
-              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('apiPrincipalId'), 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('apiPrincipalId'), variables('roles').storageBlobDataContributor)]",
               "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').storageBlobDataContributor)]",
                 "principalId": "[parameters('apiPrincipalId')]",
                 "principalType": "ServicePrincipal"
               }
@@ -938,9 +1096,9 @@
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiResourceName'))]",
-              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiResourceName')), parameters('apiPrincipalId'), '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiResourceName')), parameters('apiPrincipalId'), variables('roles').cognitiveServicesOpenAiUser)]",
               "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').cognitiveServicesOpenAiUser)]",
                 "principalId": "[parameters('apiPrincipalId')]",
                 "principalType": "ServicePrincipal"
               }
@@ -950,9 +1108,9 @@
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.Search/searchServices', parameters('searchServiceName'))]",
-              "name": "[guid(resourceId('Microsoft.Search/searchServices', parameters('searchServiceName')), parameters('apiPrincipalId'), '8ebe5a00-799e-43f5-93ac-243d3dce84a7')]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', parameters('searchServiceName')), parameters('apiPrincipalId'), variables('roles').searchIndexDataContributor)]",
               "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7')]",
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').searchIndexDataContributor)]",
                 "principalId": "[parameters('apiPrincipalId')]",
                 "principalType": "ServicePrincipal"
               }
@@ -961,9 +1119,9 @@
               "condition": "[not(empty(parameters('apiPrincipalId')))]",
               "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
               "apiVersion": "2024-05-15",
-              "name": "[format('{0}/{1}', parameters('cosmosAccountName'), guid(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName')), parameters('apiPrincipalId'), '00000000-0000-0000-0000-000000000002'))]",
+              "name": "[format('{0}/{1}', parameters('cosmosAccountName'), guid(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName')), parameters('apiPrincipalId'), variables('cosmosSqlDataContributorId')))]",
               "properties": {
-                "roleDefinitionId": "[format('{0}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002', resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName')))]",
+                "roleDefinitionId": "[format('{0}/sqlRoleDefinitions/{1}', resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName')), variables('cosmosSqlDataContributorId'))]",
                 "principalId": "[parameters('apiPrincipalId')]",
                 "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName'))]"
               }
@@ -973,11 +1131,70 @@
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
               "scope": "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]",
-              "name": "[guid(resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName')), parameters('apiPrincipalId'), '090c5cfd-751d-490a-894a-3ce6f1109419')]",
+              "name": "[guid(resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName')), parameters('apiPrincipalId'), variables('roles').serviceBusDataOwner)]",
               "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '090c5cfd-751d-490a-894a-3ce6f1109419')]",
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').serviceBusDataOwner)]",
                 "principalId": "[parameters('apiPrincipalId')]",
                 "principalType": "ServicePrincipal"
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('developerPrincipalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+              "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), parameters('developerPrincipalId'), variables('roles').storageBlobDataOwner)]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').storageBlobDataOwner)]",
+                "principalId": "[parameters('developerPrincipalId')]",
+                "principalType": "User"
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('developerPrincipalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiResourceName'))]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', parameters('openAiResourceName')), parameters('developerPrincipalId'), variables('roles').cognitiveServicesOpenAiUser)]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').cognitiveServicesOpenAiUser)]",
+                "principalId": "[parameters('developerPrincipalId')]",
+                "principalType": "User"
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('developerPrincipalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.Search/searchServices', parameters('searchServiceName'))]",
+              "name": "[guid(resourceId('Microsoft.Search/searchServices', parameters('searchServiceName')), parameters('developerPrincipalId'), variables('roles').searchIndexDataContributor)]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').searchIndexDataContributor)]",
+                "principalId": "[parameters('developerPrincipalId')]",
+                "principalType": "User"
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('developerPrincipalId')))]",
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2022-04-01",
+              "scope": "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName'))]",
+              "name": "[guid(resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusNamespaceName')), parameters('developerPrincipalId'), variables('roles').serviceBusDataOwner)]",
+              "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('roles').serviceBusDataOwner)]",
+                "principalId": "[parameters('developerPrincipalId')]",
+                "principalType": "User"
+              }
+            },
+            {
+              "condition": "[not(empty(parameters('developerPrincipalId')))]",
+              "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
+              "apiVersion": "2024-05-15",
+              "name": "[format('{0}/{1}', parameters('cosmosAccountName'), guid(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName')), parameters('developerPrincipalId'), variables('cosmosSqlDataContributorId')))]",
+              "properties": {
+                "roleDefinitionId": "[format('{0}/sqlRoleDefinitions/{1}', resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName')), variables('cosmosSqlDataContributorId'))]",
+                "principalId": "[parameters('developerPrincipalId')]",
+                "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('cosmosAccountName'))]"
               }
             }
           ]
@@ -986,6 +1203,7 @@
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deployments', 'appServiceDeploy')]",
         "[resourceId('Microsoft.Resources/deployments', 'cosmosDeploy')]",
+        "[resourceId('Microsoft.Resources/deployments', 'functionAppDeploy')]",
         "[resourceId('Microsoft.Resources/deployments', 'openAiDeploy')]",
         "[resourceId('Microsoft.Resources/deployments', 'searchDeploy')]",
         "[resourceId('Microsoft.Resources/deployments', 'serviceBusDeploy')]",
@@ -1021,6 +1239,10 @@
     "SWA_HOSTNAME": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Resources/deployments', 'staticWebAppDeploy'), '2025-04-01').outputs.defaultHostname.value]"
+    },
+    "FUNCTION_HOSTNAME": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'functionAppDeploy'), '2025-04-01').outputs.defaultHostName.value]"
     }
   }
 }
