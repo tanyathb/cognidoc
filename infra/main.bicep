@@ -23,6 +23,10 @@ module serviceBus 'modules/servicebus.bicep' = {
   name: 'serviceBusDeploy'
 }
 
+module staticWebApp 'modules/staticwebapp.bicep' = {
+  name: 'staticWebAppDeploy'
+}
+
 module rbac 'modules/rbac.bicep' = {
   name: 'rbacDeploy'
   params: {
@@ -35,8 +39,10 @@ module rbac 'modules/rbac.bicep' = {
   }
 }
 
+
 output BLOB_ENDPOINT string = storage.outputs.blobEndpoint
 output COSMOS_ENDPOINT string = cosmos.outputs.documentDbEndpoint
 output SEARCH_ENDPOINT string = search.outputs.searchEndpoint
 output OPENAI_ENDPOINT string = openAi.outputs.openAiEndpoint
 output SERVICEBUS_ENDPOINT string = serviceBus.outputs.serviceBusEndpoint
+output SWA_HOSTNAME string = staticWebApp.outputs.defaultHostname
