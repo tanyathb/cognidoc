@@ -20,8 +20,17 @@ builder.Services.AddCors(options =>
     {
         policy.SetIsOriginAllowed(origin =>
         {
-            var uri = new Uri(origin);
-            return uri.Host == "localhost" || uri.Host.EndsWith("azurestaticapps.net");
+            if (string.IsNullOrWhiteSpace(origin)) return false;
+
+            if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+            {
+                return false;
+            }
+
+            var host = uri.Host;
+            return host == "localhost"
+                || host == "azurestaticapps.net"
+                || host.EndsWith(".azurestaticapps.net");
         })
         .AllowAnyHeader()
         .AllowAnyMethod()
@@ -37,7 +46,6 @@ builder.Services.AddAzureClients(clientBuilder =>
 {
     if (builder.Environment.IsDevelopment())
     {
-        // Local machine: Read connection string from appsettings.Development.json
         var localConnection = builder.Configuration.GetConnectionString("AzureStorage")
                               ?? "UseDevelopmentStorage=true";
 
@@ -46,7 +54,6 @@ builder.Services.AddAzureClients(clientBuilder =>
     }
     else
     {
-        // Azure App Service: Passwordless via Managed Identity & BlobEndpoint
         var endpoint = builder.Configuration["Storage:BlobEndpoint"]
             ?? throw new InvalidOperationException("Storage:BlobEndpoint configuration is missing in Azure App Settings.");
 
@@ -66,9 +73,15 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseCors("AllowReactApp");
+// --- 4. MIDDLEWARE PIPELINE (CORRECT ORDER) ---
 app.UseHttpsRedirection();
+
+app.UseRouting();
+
+app.UseCors("AllowReactApp");
+
 app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();
