@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.10.12201.205
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CogniDoc.Application", "CogniDoc.Application\CogniDoc.Application.csproj", "{5C3CF18C-8033-B418-B4AE-91BA3E001CD5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CogniDoc.Domain", "CogniDoc.Domain\CogniDoc.Domain.csproj", "{8E320435-177C-6208-FAED-35AF88E4F6FF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CogniDoc.Functions", "CogniDoc.Functions\CogniDoc.Functions.csproj", "{04CCC462-B681-003C-F003-16C0F88E2ADA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CogniDoc.Infrastructure", "CogniDoc.Infrastructure\CogniDoc.Infrastructure.csproj", "{4AE3AA15-E23C-A1C4-1DB5-DEEBFA8757B1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CogniDoc.WebAPI", "CogniDoc.WebAPI\CogniDoc.WebAPI.csproj", "{F20BCF45-FC4D-871C-425D-DD53B33B7091}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5C3CF18C-8033-B418-B4AE-91BA3E001CD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C3CF18C-8033-B418-B4AE-91BA3E001CD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C3CF18C-8033-B418-B4AE-91BA3E001CD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C3CF18C-8033-B418-B4AE-91BA3E001CD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E320435-177C-6208-FAED-35AF88E4F6FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E320435-177C-6208-FAED-35AF88E4F6FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E320435-177C-6208-FAED-35AF88E4F6FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E320435-177C-6208-FAED-35AF88E4F6FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04CCC462-B681-003C-F003-16C0F88E2ADA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04CCC462-B681-003C-F003-16C0F88E2ADA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04CCC462-B681-003C-F003-16C0F88E2ADA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04CCC462-B681-003C-F003-16C0F88E2ADA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4AE3AA15-E23C-A1C4-1DB5-DEEBFA8757B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AE3AA15-E23C-A1C4-1DB5-DEEBFA8757B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AE3AA15-E23C-A1C4-1DB5-DEEBFA8757B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AE3AA15-E23C-A1C4-1DB5-DEEBFA8757B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F20BCF45-FC4D-871C-425D-DD53B33B7091}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F20BCF45-FC4D-871C-425D-DD53B33B7091}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F20BCF45-FC4D-871C-425D-DD53B33B7091}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F20BCF45-FC4D-871C-425D-DD53B33B7091}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7D5039DB-9DDF-475C-9195-162E1D30E4B0}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,6 @@
+@AiPipeline.WebAPI_HostAddress = http://localhost:5007
+
+GET {{AiPipeline.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
