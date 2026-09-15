@@ -41,6 +41,7 @@ module appService 'modules/appservice.bicep' = {
 module functionApp 'modules/functionapp.bicep' = {
   name: 'functionAppDeploy'
   params: {
+    appServicePlanId: appService.outputs.appServicePlanId
     storageAccountName: storage.outputs.name
     blobEndpoint: storage.outputs.blobEndpoint
     cosmosEndpoint: cosmos.outputs.documentDbEndpoint
