@@ -1,5 +1,5 @@
 param appName string = 'swa-cognidoc-dev'
-param location string = resourceGroup().location
+param location string = 'eastasia'
 
 resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
   name: appName
