@@ -4,6 +4,9 @@ param functionAppPrincipalId string = ''
 @description('Optional: Entra ID of the developer for local debugging')
 param developerPrincipalId string = ''
 
+@description('Optional: Principal ID of the App Service Web API Managed Identity')
+param apiPrincipalId string = ''
+
 param storageAccountName string
 param searchServiceName string
 param openAiResourceName string
@@ -118,5 +121,55 @@ resource devCosmosRole 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments
     roleDefinitionId: '${cosmos.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
     principalId: developerPrincipalId
     scope: cosmos.id
+  }
+}
+
+resource apiBlobRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(apiPrincipalId)) {
+  name: guid(storage.id, apiPrincipalId, 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+  scope: storage
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe') // Storage Blob Data Contributor
+    principalId: apiPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource apiOpenAiRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(apiPrincipalId)) {
+  name: guid(openAi.id, apiPrincipalId, '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
+  scope: openAi
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd') // Cognitive Services OpenAI User
+    principalId: apiPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource apiSearchRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(apiPrincipalId)) {
+  name: guid(search.id, apiPrincipalId, '8ebe5a00-799e-43f5-93ac-243d3dce84a7')
+  scope: search
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '8ebe5a00-799e-43f5-93ac-243d3dce84a7') // Search Index Data Contributor
+    principalId: apiPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource apiCosmosRole 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = if (!empty(apiPrincipalId)) {
+  parent: cosmos
+  name: guid(cosmos.id, apiPrincipalId, '00000000-0000-0000-0000-000000000002')
+  properties: {
+    roleDefinitionId: '${cosmos.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002' // Built-in Data Contributor
+    principalId: apiPrincipalId
+    scope: cosmos.id
+  }
+}
+
+resource apiServiceBusRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(apiPrincipalId)) {
+  name: guid(serviceBus.id, apiPrincipalId, '090c5cfd-751d-490a-894a-3ce6f1109419')
+  scope: serviceBus
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '090c5cfd-751d-490a-894a-3ce6f1109419') // Azure Service Bus Data Owner
+    principalId: apiPrincipalId
+    principalType: 'ServicePrincipal'
   }
 }
