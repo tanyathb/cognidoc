@@ -23,18 +23,18 @@ resource cosmos 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' existing = { 
 resource serviceBus 'Microsoft.ServiceBus/namespaces@2022-10-01-preview' existing = { name: serviceBusNamespaceName }
 
 // ----------------------------------------------------------------------------
-// Built-in Role Definitions
+// Verified Azure Built-in Role Definitions
 // ----------------------------------------------------------------------------
 var roles = {
   // Storage
   storageBlobDataOwner: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
   storageBlobDataContributor: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
   
-  // Cognitive Services OpenAI User (Data Plane)
+  // Cognitive Services OpenAI User
   cognitiveServicesOpenAiUser: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
   
-  // Replace with the exact GUID output by the az role definition list command above:
-  searchIndexDataContributor: '7ca78c08-252a-4471-8641-05b400b03863'
+  // Search Index Data Contributor
+  searchIndexDataContributor: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
   
   // Azure Service Bus Data Owner
   serviceBusDataOwner: '090c5cfd-751d-490a-894a-3ce6f1109419'
@@ -151,7 +151,7 @@ resource apiServiceBusRole 'Microsoft.Authorization/roleAssignments@2022-04-01' 
 }
 
 // ============================================================================
-// 3. LOCAL DEVELOPER ASSIGNMENTS (Optional)
+// 3. LOCAL DEVELOPER ASSIGNMENTS (Conditional)
 // ============================================================================
 
 resource devBlobRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(developerPrincipalId)) {
