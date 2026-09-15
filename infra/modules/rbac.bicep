@@ -29,13 +29,14 @@ var roles = {
   // Storage
   storageBlobDataOwner: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
   storageBlobDataContributor: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-  storageQueueDataContributor: '974c5e8b-45b9-4653-a493-b5813815108a'
   
-  // AI & Search
+  // Cognitive Services OpenAI User (Data Plane)
   cognitiveServicesOpenAiUser: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
-  searchIndexDataContributor: '8ebe5a00-7179-4914-b839-f5f30b7d44ae'
   
-  // Messaging
+  // Replace with the exact GUID output by the az role definition list command above:
+  searchIndexDataContributor: '7ca78c08-252a-4471-8641-05b400b03863'
+  
+  // Azure Service Bus Data Owner
   serviceBusDataOwner: '090c5cfd-751d-490a-894a-3ce6f1109419'
 }
 
@@ -45,23 +46,11 @@ var cosmosSqlDataContributorId = '00000000-0000-0000-0000-000000000002'
 // 1. FUNCTION APP MANAGED IDENTITY ASSIGNMENTS
 // ============================================================================
 
-// Azure Functions host requires Blob Data Owner for AzureWebJobsStorage
 resource funcBlobRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(functionPrincipalId)) {
   name: guid(storage.id, functionPrincipalId, roles.storageBlobDataOwner)
   scope: storage
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.storageBlobDataOwner)
-    principalId: functionPrincipalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-// Azure Functions host requires Queue Data Contributor for internal task queues/scaling
-resource funcQueueRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(functionPrincipalId)) {
-  name: guid(storage.id, functionPrincipalId, roles.storageQueueDataContributor)
-  scope: storage
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.storageQueueDataContributor)
     principalId: functionPrincipalId
     principalType: 'ServicePrincipal'
   }
