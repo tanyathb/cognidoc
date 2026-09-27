@@ -1,5 +1,5 @@
 {
-  "name": "aipipeline.app.client",
+  "name": "cognidoc.client",
   "private": true,
   "version": "0.0.0",
   "type": "module",

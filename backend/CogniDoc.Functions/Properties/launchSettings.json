@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "AiPipeline.App.Ingestion": {
+    "CogniDoc.Functions": {
       "commandName": "Project",
       "commandLineArgs": "--port 7199",
       "launchBrowser": false
